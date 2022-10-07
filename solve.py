@@ -110,7 +110,6 @@ def read_data():
     # bfs(ROOT,[0]*607)
     # toposort(graph,ROOT)
     return graph
-    # 连通的
 
 def draw_graph(graph):
 
@@ -152,7 +151,7 @@ def schedule(pdg):
     # 从没有依赖的节点开始
     candidate = set([x for x in range(607) if x.get_deps() == set([]) ])
     used = set([])
-    while candidate.union(used) != set([]):
+    while candidate.intersection(used) != set([]):
         if len(candidate) != 0:
             cur = greedy_choose(candidate)
             used.add(cur)
@@ -170,13 +169,13 @@ def data_dependency(son):
     for parent in range(len(graph)):
         for child in son[parent]:
             # r -> w  <=
-            if len(blocks[parent].r.union(blocks[child].w))!=0:
+            if len(blocks[parent].r.intersection(blocks[child].w))!=0:
                 blocks[parent].le.add(child)
             # w -> r  <
-            if len(blocks[parent].w.union(blocks[child].r))!=0:
+            if len(blocks[parent].w.intersection(blocks[child].r))!=0:
                 blocks[parent].lt.add(child)
             # w -> w  <
-            if len(blocks[parent].w.union(blocks[child].w))!=0:
+            if len(blocks[parent].w.intersection(blocks[child].w))!=0:
                 blocks[parent].lt.add(child)
         
 # 控制依赖
@@ -205,7 +204,6 @@ def control_dependency():
                 dom[cur] |= path[i].symmetric_difference(path[j])
     
     get_diff_node(ROOT)
-
     for k,v in dom.items():
         blocks[k].le |= v
     return son
@@ -214,7 +212,7 @@ def control_dependency():
 def dependency():
     son = control_dependency()
     data_dependency(son)
-
+    import pdb;pdb.set_trace()
 # => 4D bin-packing 分配即可
 
 
