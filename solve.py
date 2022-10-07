@@ -82,7 +82,6 @@ def read_data():
         blocks.append(block(*line.split(',')[1:]))
     # 数据依赖
     for i,line in enumerate(open('attachment2.csv')):
-        if i == 0:continue
         line = line[:-1].split(',')
         if len(line) == 2:continue
         if line[1] == 'R': 
@@ -166,17 +165,26 @@ def schedule(pdg):
 # 数据依赖 
 def data_dependency(son):
     # 首先获取每个节点的所有child
+    # <优先级高于<=
     for parent in range(len(graph)):
         for child in son[parent]:
-            # r -> w  <=
-            if len(blocks[parent].r.intersection(blocks[child].w))!=0:
-                blocks[parent].le.add(child)
+            if parent in (blocks[child].lt | blocks[child].le):
+                raise Exception('parent dependent on child!')
             # w -> r  <
             if len(blocks[parent].w.intersection(blocks[child].r))!=0:
                 blocks[parent].lt.add(child)
+                if child in blocks[parent].le:
+                    blocks[parent].le.remove(child)
             # w -> w  <
             if len(blocks[parent].w.intersection(blocks[child].w))!=0:
                 blocks[parent].lt.add(child)
+                if child in blocks[parent].le:
+                    blocks[parent].le.remove(child)
+            # r -> w  <=
+            if len(blocks[parent].r.intersection(blocks[child].w))!=0:
+                if child in blocks[parent].lt:
+                    continue
+                blocks[parent].le.add(child)
         
 # 控制依赖
 def control_dependency():
@@ -212,7 +220,7 @@ def control_dependency():
 def dependency():
     son = control_dependency()
     data_dependency(son)
-    import pdb;pdb.set_trace()
+    print(blocks)
 # => 4D bin-packing 分配即可
 
 
