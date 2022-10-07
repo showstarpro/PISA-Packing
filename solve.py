@@ -112,85 +112,6 @@ def read_data():
     return graph
     # 连通的
 
-tmp = []
-def dfs(cur,vis):
-    tmp.append(cur)
-    vis[cur] = 1
-    for next in graph[cur]:
-        if vis[next]==0 : 
-            dfs(next,vis)
-
-# 深度 79
-from queue import Queue
-def bfs(root,vis):
-    record = []
-    vis[root] = 1
-    q = Queue()
-    q.put((root,0))
-    while q.qsize() != 0:
-        cur,d = q.get()
-        record.append((cur,d))
-        for next in graph[cur]:
-            if vis[next]:
-                continue
-            vis[next] = 1
-            q.put((next,d+1))
-    last_d = -1
-    for (r,d) in record:
-        if d != last_d:
-            print('\n')
-            last_d = d
-        print(r,end=' ')
-
-def toposort_dfs(graph):
-    c = [0]*len(graph)
-
-    def dfs(u):
-        c[u] = -1
-        for v in graph[u]:
-            if c[v] < 0:
-                return False
-            elif c[v] == 0:
-                if dfs(v) == False:
-                    return False
-        c[u] = 1
-        topo.append(u)
-        return True
-
-    topo = []
-    u = 0
-    while u < len(graph):
-        if c[u] == 0:
-            if dfs(u) == False:
-                return False
-        u = u + 1
-    topo.reverse()
-
-def toposort(graph,root):
-    # 可能是子图
-
-    out_ = [0]*len(graph)
-    in_ = [0]*len(graph)
-    for v,l in graph.items():
-        out_[v] = len(l)
-        for i in l:
-            in_[i] += 1
-    num = [0] * len(graph)
-
-    topo = [root]
-    num[root] = 1
-    q = Queue()
-    q.put(root)
-    while q.qsize() != 0:
-        cur = q.get()
-        for next in graph[cur]:
-            in_[next] -= 1
-            num[next] += num[cur]
-            if in_[next] == 0:
-                q.put(next)
-                topo.append(next)
-
-
 def draw_graph(graph):
 
     import networkx as nx
@@ -295,14 +216,6 @@ def dependency():
     data_dependency(son)
 
 # => 4D bin-packing 分配即可
-
-
-
-
-
-
-
-
 
 
 if __name__ ==  '__main__':
