@@ -70,45 +70,8 @@ class block:
         return f'(\nr:{self.r},\nw:{self.w},\nle:{self.le},\nlt:{self.lt}\n)'
 
 ROOT = 365 # 根节点
-blocks = []
-readmap,writemap = dict(),dict() # 556,779
-graph = dict()
 
-def read_data():
-    # 资源
-    for i,line in enumerate(open('attachment1.csv')):
-        if i == 0:continue
-        line = line[:-1]
-        blocks.append(block(*line.split(',')[1:]))
-    # 数据依赖
-    for i,line in enumerate(open('attachment2.csv')):
-        line = line[:-1].split(',')
-        if len(line) == 2:continue
-        if line[1] == 'R': 
-            blocks[int(line[0])].r = set(line[2:])
-            for v in line[2:]:
-                if v not in readmap:
-                    readmap[v] = []
-                readmap[v].append(int(line[0]))
-        elif line[1] == 'W': 
-            blocks[int(line[0])].w = set(line[2:])
-            for v in line[2:]:
-                if v not in writemap:
-                    writemap[v] = []
-                writemap[v].append(int(line[0])) 
-    # CFG
-    for i,line in enumerate(open('attachment3.csv')):
-        line = line[:-1].split(',')
-        graph[int(line[0])] = [int(v) for v in line[1:]]    
-    # 可视化 
-    # draw_graph(graph)
 
-    # root 365
-    # leaves [2, 88, 360, 381, 454]
-    # dfs(ROOT,[0]*607) 
-    # bfs(ROOT,[0]*607)
-    # toposort(graph,ROOT)
-    return graph
 
 def draw_graph(graph):
 
@@ -163,71 +126,106 @@ def schedule(pdg):
 
 
 # 数据依赖 
-def data_dependency(son):
-    # 首先获取每个节点的所有child
-    # <优先级高于<=
-    for parent in range(len(graph)):
-        for child in son[parent]:
-            if parent in (blocks[child].lt | blocks[child].le):
-                raise Exception('parent dependent on child!')
-            # w -> r  <
-            if len(blocks[parent].w.intersection(blocks[child].r))!=0:
-                blocks[parent].lt.add(child)
-                if child in blocks[parent].le:
-                    blocks[parent].le.remove(child)
-            # w -> w  <
-            if len(blocks[parent].w.intersection(blocks[child].w))!=0:
-                blocks[parent].lt.add(child)
-                if child in blocks[parent].le:
-                    blocks[parent].le.remove(child)
-            # r -> w  <=
-            if len(blocks[parent].r.intersection(blocks[child].w))!=0:
-                if child in blocks[parent].lt:
-                    continue
-                blocks[parent].le.add(child)
+
         
 # 控制依赖
-def control_dependency():
 
-    dom = dict()
-    son = dict()
-    def get_diff_node(cur):
-        if len(graph[cur]) == 0:
-            son[cur] = set([])
-            return
-        path = []
-        son[cur] = set([next for next in graph[cur]])
-        for next in graph[cur]:
-            if next not in son:
-                get_diff_node(next)
-            son[cur] |= son[next]
-            path.append(son[next]|set([next]))
-        
-        if len(path) == 1:
-            dom[cur] = set([])
-            return
-        dom[cur] = set([])
-        for i in range(len(path)-1):
-            for j in range(i,len(path)):
-                dom[cur] |= path[i].symmetric_difference(path[j])
     
-    get_diff_node(ROOT)
-    for k,v in dom.items():
-        blocks[k].le |= v
-    return son
-    
-# 依赖图 =  数据依赖 + 控制依赖; 直接维护<节点和<=节点即可
-def dependency():
-    son = control_dependency()
-    data_dependency(son)
-    print(blocks)
+
 # => 4D bin-packing 分配即可
+
+
+class Program:
+    def __init__(self,):
+        self.graph = dict()
+        self.blocks = []
+        self.read_data()
+        self.get_dependency()
+
+    def read_data(self,):
+        # 检查csv最后一行要是空的
+        # 资源
+        for i,line in enumerate(open('attachment1.csv')):
+            if i == 0:continue
+            line = line[:-1]
+            self.blocks.append(block(*line.split(',')[1:]))
+        # 数据依赖
+        for i,line in enumerate(open('attachment2.csv')):
+            line = line[:-1].split(',')
+            if len(line) == 2:continue
+            if line[1] == 'R': 
+                self.blocks[int(line[0])].r = set(line[2:])
+            elif line[1] == 'W': 
+                self.blocks[int(line[0])].w = set(line[2:]) 
+        # CFG
+        for i,line in enumerate(open('attachment3.csv')):
+            line = line[:-1].split(',')
+            self.graph[int(line[0])] = [int(v) for v in line[1:]]
+
+    # 依赖图 =  数据依赖 + 控制依赖; 直接维护<节点和<=节点即可
+    def get_dependency(self,):
+        # 由于control有个求解son的过程，所以要先于data
+        self.control_dependency()
+        self.data_dependency()
+
+    def control_dependency(self,):
+        dom = dict()
+        son = dict()
+        def get_diff_node(cur):
+            if len(self.graph[cur]) == 0:
+                son[cur] = set([])
+                return
+            path = []
+            son[cur] = set([next for next in self.graph[cur]])
+            for next in self.graph[cur]:
+                if next not in son:
+                    get_diff_node(next)
+                son[cur] |= son[next]
+                path.append(son[next]|set([next]))
+            
+            if len(path) == 1:
+                dom[cur] = set([])
+                return
+            dom[cur] = set([])
+            for i in range(len(path)-1):
+                for j in range(i,len(path)):
+                    dom[cur] |= path[i].symmetric_difference(path[j])
+        
+        get_diff_node(ROOT)
+        for k,v in dom.items():
+            self.blocks[k].le |= v
+        self.son = son
+
+    def data_dependency(self,):
+        # 首先获取每个节点的所有child
+        # <优先级高于<=
+        for parent in range(len(self.graph)):
+            for child in self.son[parent]:
+                if parent in (self.blocks[child].lt | self.blocks[child].le):
+                    raise Exception('parent dependent on child!')
+                # w -> r  <
+                if len(self.blocks[parent].w.intersection(self.blocks[child].r))!=0:
+                    self.blocks[parent].lt.add(child)
+                    if child in self.blocks[parent].le:
+                        self.blocks[parent].le.remove(child)
+                # w -> w  <
+                if len(self.blocks[parent].w.intersection(self.blocks[child].w))!=0:
+                    self.blocks[parent].lt.add(child)
+                    if child in self.blocks[parent].le:
+                        self.blocks[parent].le.remove(child)
+                # r -> w  <=
+                if len(self.blocks[parent].r.intersection(self.blocks[child].w))!=0:
+                    if child in self.blocks[parent].lt:
+                        continue
+                    self.blocks[parent].le.add(child)
 
 
 if __name__ ==  '__main__':
     try:
-        read_data()
-        dependency()
+        program = Program()
+        program.get_dependency()
+        print(program.blocks)
+        import pdb;pdb.set_trace()
     except:
         import sys,pdb,bdb
         type, value, tb = sys.exc_info()
