@@ -65,6 +65,9 @@ class block:
         self.w = set()
         self.le = set() # <=
         self.lt = set() # <
+    
+    def __repr__(self,):
+        return f'(\nr:{self.r},\nw:{self.w},\nle:{self.le},\nlt:{self.lt}\n)'
 
 
 blocks = []
@@ -83,18 +86,18 @@ def read_data():
         line = line[:-1].split(',')
         if len(line) == 2:continue
         if line[1] == 'R': 
-            blocks[int(line[0])].readv = line[2:]
+            blocks[int(line[0])].r = set(line[2:])
             for v in line[2:]:
                 if v not in readmap:
                     readmap[v] = []
                 readmap[v].append(int(line[0]))
         elif line[1] == 'W': 
-            blocks[int(line[0])].writev = line[2:]
+            blocks[int(line[0])].w = set(line[2:])
             for v in line[2:]:
                 if v not in writemap:
                     writemap[v] = []
                 writemap[v].append(int(line[0])) 
-    # 控制依赖
+    # CFG
     for i,line in enumerate(open('attachment3.csv')):
         line = line[:-1].split(',')
         graph[int(line[0])] = [int(v) for v in line[1:]]    
@@ -242,32 +245,21 @@ def schedule(pdg):
 
 
 # 数据依赖 
-def data_dependency():
-
-    son = {k: set([]) for k in range(len(graph))}
-    def getson(cur):
-        if len(graph[cur]) == 0:
-            son[cur] = []
-        for next in graph[cur]:
-            if next not in son:
-                getson(next)
-            son[cur].update(son[next])
-            son[cur].update([next])
-
-    getson(365)
+def data_dependency(son):
     # 首先获取每个节点的所有child
     for parent in range(len(graph)):
         for child in son[parent]:
             # r -> w  <=
-            if len(graph[parent].r.union(graph[child].w))!=0:
-                import pdb;pdb.set_trace()
+            if len(blocks[parent].r.union(blocks[child].w))!=0:
                 blocks[parent].le.add(child)
             # w -> r  <
-            if len(graph[parent].w.union(graph[child].r))!=0:
+            if len(blocks[parent].w.union(blocks[child].r))!=0:
                 blocks[parent].lt.add(child)
             # w -> w  <
-            if len(graph[parent].w.union(graph[child].w))!=0:
+            if len(blocks[parent].w.union(blocks[child].w))!=0:
                 blocks[parent].lt.add(child)
+    import pdb;pdb.set_trace()
+        
 # 控制依赖
 def control_dependency():
 
@@ -294,8 +286,17 @@ def control_dependency():
                 dom[cur] |= path[i].symmetric_difference(path[j])
     
     get_diff_node(365)
+
+    for k,v in dom.items():
+        blocks[k].le |= v
+
+    return son
     
 # 依赖图 =  数据依赖 + 控制依赖; 直接维护<节点和<=节点即可
+def dependency():
+    son = control_dependency()
+    data_dependency(son)
+
 # => 4D bin-packing 分配即可
 
 
@@ -307,7 +308,7 @@ def control_dependency():
 if __name__ ==  '__main__':
     try:
         read_data()
-        control_dependency()
+        dependency()
     except:
         import sys,pdb,bdb
         type, value, tb = sys.exc_info()
