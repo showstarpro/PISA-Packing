@@ -69,7 +69,7 @@ class block:
     def __repr__(self,):
         return f'(\nr:{self.r},\nw:{self.w},\nle:{self.le},\nlt:{self.lt}\n)'
 
-
+ROOT = 365 # 根节点
 blocks = []
 readmap,writemap = dict(),dict() # 556,779
 graph = dict()
@@ -106,9 +106,9 @@ def read_data():
 
     # root 365
     # leaves [2, 88, 360, 381, 454]
-    # dfs(365,[0]*607) 
-    # bfs(365,[0]*607)
-    # toposort(graph,365)
+    # dfs(ROOT,[0]*607) 
+    # bfs(ROOT,[0]*607)
+    # toposort(graph,ROOT)
     return graph
     # 连通的
 
@@ -190,7 +190,6 @@ def toposort(graph,root):
                 q.put(next)
                 topo.append(next)
 
-    import pdb;pdb.set_trace()
 
 def draw_graph(graph):
 
@@ -205,7 +204,7 @@ def draw_graph(graph):
     G = nx.DiGraph()
     G.add_edges_from(edges)
     colors = ['green' if node_name in [2, 88, 360, 381, 454] else 'blue' for node_name in list(G.nodes)]
-    colors[list(G.nodes).index(365)] = 'red'
+    colors[list(G.nodes).index(ROOT)] = 'red'
     plt.figure(num=None, figsize=(50, 50), dpi=80)
     nx.draw(G, node_size=600, node_color = colors,linewidths=0.25, with_labels=True,pos=nx.nx_agraph.graphviz_layout(G))
     plt.savefig('graph.png') 
@@ -258,7 +257,6 @@ def data_dependency(son):
             # w -> w  <
             if len(blocks[parent].w.union(blocks[child].w))!=0:
                 blocks[parent].lt.add(child)
-    import pdb;pdb.set_trace()
         
 # 控制依赖
 def control_dependency():
@@ -285,11 +283,10 @@ def control_dependency():
             for j in range(i,len(path)):
                 dom[cur] |= path[i].symmetric_difference(path[j])
     
-    get_diff_node(365)
+    get_diff_node(ROOT)
 
     for k,v in dom.items():
         blocks[k].le |= v
-
     return son
     
 # 依赖图 =  数据依赖 + 控制依赖; 直接维护<节点和<=节点即可
@@ -298,6 +295,9 @@ def dependency():
     data_dependency(son)
 
 # => 4D bin-packing 分配即可
+
+
+
 
 
 
