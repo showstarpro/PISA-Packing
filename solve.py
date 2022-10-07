@@ -1,4 +1,3 @@
-
 from tqdm import trange
 
 class pipeline:
@@ -22,7 +21,6 @@ class pipeline:
     def get_resource(self,name):
         # 检查流水线之间的限制
         return sum(blk.resource[name] for blk in self.scheduled)
-
 
 class pipelines:
     def __init__(self,):
@@ -52,7 +50,7 @@ class pipelines:
                 return False
         return True
 
-
+ROOT = 365 # 根节点
 class block:
     def __init__(self,*args):
         self.resources = {
@@ -69,29 +67,7 @@ class block:
     def __repr__(self,):
         return f'(\nr:{self.r},\nw:{self.w},\nle:{self.le},\nlt:{self.lt}\n)'
 
-ROOT = 365 # 根节点
-
-
-
-def draw_graph(graph):
-
-    import networkx as nx
-    import matplotlib.pyplot as plt  
-    import pygraphviz
-    edges = []
-    for node in graph:
-        for i in graph[node]:
-            edges.append((node, i))
-    
-    G = nx.DiGraph()
-    G.add_edges_from(edges)
-    colors = ['green' if node_name in [2, 88, 360, 381, 454] else 'blue' for node_name in list(G.nodes)]
-    colors[list(G.nodes).index(ROOT)] = 'red'
-    plt.figure(num=None, figsize=(50, 50), dpi=80)
-    nx.draw(G, node_size=600, node_color = colors,linewidths=0.25, with_labels=True,pos=nx.nx_agraph.graphviz_layout(G))
-    plt.savefig('graph.png') 
-
-# 贪心方法: 首先处理出依赖图，显然只能从没有任何依赖的节点开始(记为ready), 然后计算出ready的优先级，尝试分配到active, 如果满足运行条件的话，更新ready
+#  贪心方法: 首先处理出依赖图，显然只能从没有任何依赖的节点开始(记为ready), 然后计算出ready的优先级，尝试分配到active, 如果满足运行条件的话，更新ready
 def schedule(pdg):
     # pdg 为控制依赖 数据依赖处理好的图
     # 贪心选择
@@ -122,18 +98,6 @@ def schedule(pdg):
             for next in pdg[cur]:
                 pass
     pass
-
-
-
-# 数据依赖 
-
-        
-# 控制依赖
-
-    
-
-# => 4D bin-packing 分配即可
-
 
 class Program:
     def __init__(self,):
@@ -225,7 +189,6 @@ if __name__ ==  '__main__':
         program = Program()
         program.get_dependency()
         print(program.blocks)
-        import pdb;pdb.set_trace()
     except:
         import sys,pdb,bdb
         type, value, tb = sys.exc_info()
