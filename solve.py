@@ -54,10 +54,10 @@ ROOT = 365 # 根节点
 class block:
     def __init__(self,*args):
         self.resources = {
-            'tcam': args[0],
-            'hash': args[1],
-            'alu': args[2],
-            'qualify': args[3],
+            'tcam': int(args[0]),
+            'hash': int(args[1]),
+            'alu': int(args[2]),
+            'qualify': int(args[3]),
         }
         self.r = set()
         self.w = set()
@@ -104,7 +104,6 @@ class Program:
         self.graph = dict()
         self.blocks = []
         self.read_data()
-        self.get_dependency()
 
     def read_data(self,):
         # 检查csv最后一行要是空的
