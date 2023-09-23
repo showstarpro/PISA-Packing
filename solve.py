@@ -184,15 +184,7 @@ class Program:
 
 
 if __name__ ==  '__main__':
-    try:
-        program = Program()
-        program.get_dependency()
-        print(program.blocks)
-    except:
-        import sys,pdb,bdb
-        type, value, tb = sys.exc_info()
-        if type == bdb.BdbQuit:
-            exit()
-        print(type,value)
-        pdb.post_mortem(tb)
+    program = Program()
+    program.get_dependency()
+    print(program.blocks)
     
